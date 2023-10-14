@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: free5gc-pcf
+  labels:
+    app: free5gc
+    nf: pcf
+spec:
+  selector:
+    matchLabels:
+      app: free5gc
+      nf: pcf
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: free5gc
+        nf: pcf
+    spec:
+      initContainers:
+      - name: wait-smf
+        image: busybox:1.32.0
+        env:
+        - name: DEPENDENCIES
+          value: smf-nsmf:8000
+        command: ["sh", "-c", "until nc -z $DEPENDENCIES; do echo waiting for the SMF; sleep 2; done;"]
+      containers:
+      - image: ghcr.io/niloysh/free5gc-aio:v3.2.0
+        name: pcf
+        ports:
+        - containerPort: 8000
+        command: ["./pcf"]
+        args: ["--config", "config/pcfcfg.yaml"]   
+        env:
+          - name: GIN_MODE
+            value: release
+        volumeMounts:
+        - mountPath: /free5gc/config/
+          name: pcf-volume
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      volumes:
+      - name: pcf-volume
+        projected:
+          sources:
+          - configMap:
+              name: pcf-configmap

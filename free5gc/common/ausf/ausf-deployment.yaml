@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: free5gc-ausf
+  labels:
+    app: free5gc
+    nf: ausf
+spec:
+  selector:
+    matchLabels:
+      app: free5gc
+      nf: ausf
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: free5gc
+        nf: ausf
+    spec:
+      initContainers:
+      - name: wait-amf
+        image: busybox:1.32.0
+        env:
+        - name: DEPENDENCIES
+          value: amf-namf:8000
+        command: ["sh", "-c", "until nc -z $DEPENDENCIES; do echo waiting for the AMF; sleep 2; done;"]
+      containers:
+      - image: ghcr.io/niloysh/free5gc-aio:v3.2.0
+        name: ausf
+        ports:
+        - containerPort: 8000
+        command: ["./ausf"]
+        args: ["--config", "config/ausfcfg.yaml"]  
+        env:
+          - name: GIN_MODE
+            value: release
+        volumeMounts:
+        - mountPath: /free5gc/config/
+          name: ausf-volume
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      volumes:
+      - name: ausf-volume
+        projected:
+          sources:
+          - configMap:
+              name: ausf-configmap

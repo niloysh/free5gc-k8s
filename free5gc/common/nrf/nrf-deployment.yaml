@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: free5gc-nrf
+  labels:
+    app: free5gc
+    nf: nrf
+spec:
+  selector:
+    matchLabels:
+      app: free5gc
+      nf: nrf
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: free5gc
+        nf: nrf
+    spec:
+      initContainers:
+      - name: wait-mongo
+        image: busybox:1.32.0
+        env:
+        - name: DEPENDENCIES
+          value: mongodb:27017
+        command: ["sh", "-c", "until nc -z $DEPENDENCIES; do echo waiting for the MongoDB; sleep 2; done;"]
+      containers:
+      - image: ghcr.io/niloysh/free5gc-aio:v3.2.0
+        name: nrf
+        ports:
+        - containerPort: 8000
+        command: ["./nrf"]
+        args: ["--config", "config/nrfcfg.yaml"]
+        env: 
+          - name: DB_URI
+            value: mongodb://mongodb/free5gc
+          - name: GIN_MODE
+            value: release
+        volumeMounts:
+        - mountPath: /free5gc/config/
+          name: nrf-volume
+        readinessProbe:
+          initialDelaySeconds: 0
+          periodSeconds: 1
+          timeoutSeconds: 1
+          failureThreshold:  40
+          successThreshold: 1
+          httpGet:
+            scheme: "HTTP"
+            port: 8000
+        livenessProbe:
+          initialDelaySeconds: 120
+          periodSeconds: 10
+          timeoutSeconds: 10
+          failureThreshold: 3
+          successThreshold: 1
+          httpGet:
+            scheme: "HTTP"
+            port: 8000
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      volumes:
+      - name: nrf-volume
+        projected:
+          sources:
+          - configMap:
+              name: nrf-configmap

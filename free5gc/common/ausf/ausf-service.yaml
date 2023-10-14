@@ -1,0 +1,14 @@
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: ausf-nausf
+  labels:
+    app: free5gc
+    nf: ausf
+spec:
+  ports:
+    - port: 8000
+  selector:
+    app: free5gc
+    nf: ausf

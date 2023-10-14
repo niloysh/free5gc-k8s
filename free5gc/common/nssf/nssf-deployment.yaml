@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: free5gc-nssf
+  labels:
+    app: free5gc
+    nf: nssf
+spec:
+  selector:
+    matchLabels:
+      app: free5gc
+      nf: nssf
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: free5gc
+        nf: nssf
+    spec:
+      initContainers:
+        - name: wait-udr
+          image: busybox:1.32.0
+          env:
+          - name: DEPENDENCIES
+            value: udr-nudr:8000
+          command: ["sh", "-c", "until nc -z $DEPENDENCIES; do echo waiting for the UDR; sleep 2; done;"]
+      containers:
+      - image: ghcr.io/niloysh/free5gc-aio:v3.2.0
+        name: nssf
+        ports:
+        - containerPort: 8000
+        command: ["./nssf"]
+        args: ["--config", "config/nssfcfg.yaml"]   
+        env:
+          - name: GIN_MODE
+            value: release
+        volumeMounts:
+        - mountPath: /free5gc/config/
+          name: nssf-volume
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      volumes:
+      - name: nssf-volume
+        projected:
+          sources:
+          - configMap:
+              name: nssf-configmap
