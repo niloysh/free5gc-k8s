@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: free5gc-upf2
+spec:
+  template:
+    spec:
+      shareProcessNamespace: true
+      containers:
+      - name: upf-stats
+        image: ghcr.io/niloysh/upf-exporter:v3.0.1
+        imagePullPolicy: Always
+        command: [ "/bin/bash", "-c", "--" ]
+        args:
+        - |
+          if [ "$DEBUG_MODE" = "true" ]; then
+            while true; do sleep 30; done;
+          else
+            /app/upf-exporter.py
+          fi
+        env:
+          - name: SLEEP_INTERVAL
+            value: "5"
+          - name: SERVER_PORT
+            value: "9000"
+          - name: GTP_IFNAME
+            value: "upf2gtp"
+          - name: DEBUG_MODE
+            value: "false"
+        securityContext:
+          capabilities:
+            add: ["NET_ADMIN"]
+        ports:
+        - name: metrics
+          containerPort: 9000
+        resources:
+          requests:
+            memory: "100Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "250m"

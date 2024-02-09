@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: free5gc-smf2
+spec:
+  template:
+    spec:
+      containers:
+      - name: smf
+        volumeMounts:
+        - name: varlog
+          mountPath: /var/log/
+
+      - image: busybox
+        name: smf-logs
+        args: [/bin/sh, -c, 'while ! tail -f /var/log/smf-slice-info.log 2>/dev/null; do sleep 1 ; done']
+        volumeMounts:
+        - mountPath: /var/log/
+          name: varlog
+            
+        resources:
+          requests:
+            memory: "100Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "250m"
+      volumes:
+        - name: varlog
+          emptyDir: {}

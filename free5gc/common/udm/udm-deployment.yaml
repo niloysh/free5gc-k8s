@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: free5gc-udm
+  labels:
+    app: free5gc
+    nf: udm
+spec:
+  selector:
+    matchLabels:
+      app: free5gc
+      nf: udm
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: free5gc
+        nf: udm
+    spec:
+      initContainers:
+      - name: wait-pcf
+        image: busybox:1.32.0
+        env:
+        - name: DEPENDENCIES
+          value: pcf-npcf:8000
+        command: ["sh", "-c", "until nc -z $DEPENDENCIES; do echo waiting for the SMF; sleep 2; done;"]
+      containers:
+      - image: ghcr.io/niloysh/free5gc-aio:v3.2.0
+        name: udm
+        ports:
+        - containerPort: 8000
+        command: ["./udm"]
+        args: ["--config", "config/udmcfg.yaml"]   
+        env:
+          - name: GIN_MODE
+            value: release
+        volumeMounts:
+        - mountPath: /free5gc/config/
+          name: udm-volume
+        resources:
+          requests:
+            memory: "100Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "250m"
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      volumes:
+      - name: udm-volume
+        projected:
+          sources:
+          - configMap:
+              name: udm-configmap

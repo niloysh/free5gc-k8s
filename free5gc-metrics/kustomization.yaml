@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../free5gc
+
+patchesStrategicMerge:
+  - slices/slice1/upf-deployment-patch.yaml
+  - slices/slice1/smf-deployment-patch.yaml
+  - slices/slice2/upf-deployment-patch.yaml
+  - slices/slice2/smf-deployment-patch.yaml
+
+# configMapGenerator:
+#   - name: smf-fluent-bit-config
+#     files:
+#       - slices/slice1/fluent-bit.conf
+#       - slices/slice1/parsers.conf
+#       - slices/slice1/filter.lua
+
+images:
+  - name: ghcr.io/niloysh/free5gc-upf
+    newTag: latest

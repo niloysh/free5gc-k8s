@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nrf-configmap
+  labels:
+    app: free5gc
+    nf: nrf
+data:
+  nrfcfg.yaml: |
+    info:
+      version: 1.0.1
+      description: NRF initial local configuration
+    
+    configuration:
+      MongoDBName: free5gc
+      MongoDBUrl: mongodb://mongodb:27017
+      sbi:
+        scheme: http
+        registerIPv4: nrf-nnrf # IP used to serve NFs or register to another NRF
+        bindingIPv4: 0.0.0.0  # IP used to bind the service
+        port: 8000
+        tls: # the local path of TLS key
+          pem: config/TLS/nrf.pem # NRF TLS Certificate
+          key: config/TLS/nrf.key # NRF TLS Private key
+      DefaultPlmnId:
+        mcc: 001
+        mnc: 01
+      serviceNameList:
+        - nnrf-nfm
+        - nnrf-disc
+    
+    logger:
+      NRF:
+        debugLevel: info
+        ReportCaller: false
+  

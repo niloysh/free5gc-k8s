@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: free5gc-smf
+spec:
+  template:
+    spec:
+      containers:
+      - name: smf
+        volumeMounts:
+        - name: varlog
+          mountPath: /var/log/
+
+      - image: busybox
+        name: smf-logs
+        args: [/bin/sh, -c, 'while ! tail -f /var/log/smf-slice-info.log 2>/dev/null; do sleep 1 ; done']
+        volumeMounts:
+        - mountPath: /var/log/
+          name: varlog
+
+      # - image: fluent/fluent-bit:1.9
+      #   name: smf-stats
+      #   imagePullPolicy: Always
+      #   env:
+      #     - name: FLUENT_UID
+      #       value: "0"
+      #   volumeMounts:
+      #     - name: config-volume
+      #       mountPath: /fluent-bit/etc/
+      #     - name: varlog
+      #       mountPath: /var/log/
+            
+        resources:
+          requests:
+            memory: "100Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "250m"
+      volumes:
+        # - name: config-volume
+        #   configMap:
+        #     name: smf-fluent-bit-config
+        #     items:
+        #       - key: fluent-bit.conf
+        #         path: fluent-bit.conf
+        #       - key: parsers.conf
+        #         path: parsers.conf
+        #       - key: filter.lua
+        #         path: filter.lua
+        - name: varlog
+          emptyDir: {}

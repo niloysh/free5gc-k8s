@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: smf2-nsmf
+  labels:
+    app: free5gc
+    nf: smf
+    name: smf2
+spec:
+  ports:
+    - port: 8000
+  selector:
+    app: free5gc
+    nf: smf
+    name: smf2

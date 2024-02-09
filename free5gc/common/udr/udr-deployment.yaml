@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: free5gc-udr
+  labels:
+    app: free5gc
+    nf: udr
+spec:
+  selector:
+    matchLabels:
+      app: free5gc
+      nf: udr
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: free5gc
+        nf: udr
+    spec:
+      initContainers:
+      - name: wait-udm
+        image: busybox:1.32.0
+        env:
+        - name: DEPENDENCIES
+          value: udm-nudm:8000
+        command: ["sh", "-c", "until nc -z $DEPENDENCIES; do echo waiting for the SMF; sleep 2; done;"]
+      containers:
+      - image: ghcr.io/niloysh/free5gc-aio:v3.2.0
+        name: udr
+        ports:
+        - containerPort: 8000
+        command: ["./udr"]
+        args: ["--config", "config/udrcfg.yaml"]   
+        env: 
+          - name: DB_URI
+            value: mongodb://mongodb/free5gc
+          - name: GIN_MODE
+            value: release
+        volumeMounts:
+        - mountPath: /free5gc/config/
+          name: udr-volume
+        resources:
+          requests:
+            memory: "100Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "250m"
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      volumes:
+      - name: udr-volume
+        projected:
+          sources:
+          - configMap:
+              name: udr-configmap
