@@ -32,7 +32,7 @@ spec:
           value: ausf-nausf:8000
         command: ["sh", "-c", "until nc -z $DEPENDENCIES; do echo waiting for the AUSF; sleep 2; done;"]
       containers:
-      - image: ghcr.io/niloysh/free5gc-smf:v3.2.0-sliceinfo
+      - image: ghcr.io/niloysh/free5gc:v3.2.0
         name: smf
         imagePullPolicy: Always
         ports:

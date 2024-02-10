@@ -18,5 +18,5 @@ patchesStrategicMerge:
 #       - slices/slice1/filter.lua
 
 images:
-  - name: ghcr.io/niloysh/free5gc-upf
-    newTag: latest
+  - name: ghcr.io/niloysh/free5gc
+    newTag: v3.2.0-metrics

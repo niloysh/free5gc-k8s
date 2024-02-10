@@ -26,7 +26,7 @@ spec:
         image: appropriate/curl
         command: ['sh', '-c', 'until curl -s -o /dev/null -w "%{http_code}" http://nrf-nnrf:8000 | grep "200"; do sleep 1; done;']
       containers:
-      - image: ghcr.io/niloysh/free5gc-aio:v3.2.0
+      - image: ghcr.io/niloysh/free5gc:v3.2.0
         imagePullPolicy: Always
         name: amf
         ports:
