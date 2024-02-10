@@ -15,6 +15,7 @@ For more information about Free5GC, please visit the [Free5GC GitHub repository]
 The repository is organized as follows:
 
 - `free5gc/`: Contains Kubernetes manifest files for deploying Free5GC using a microservices architecture.
+- `free5gc-metrics/`: Contains Kubernetes manifest files for deploying Free5GC with custom UPF and SMF which expose metrics.
 - `free5gc-webui/`: Contains Kubernetes manifest files for deploying the Free5GC WebUI.
 - `mongodb/`: Contains Kubernetes manifest files for deploying the MongoDB database, which is a prerequisite for deploying Free5GC.
 - `networks5g/`: Contains network attachment definitions for Free5GC. 
@@ -67,6 +68,26 @@ cd bin
 
 ![UE connection success](images/ue-log.png)
 
+### Check successful deployment
+
+All pods should be in the `Running` state.
+<details>
+<summary>Summary of all pods</summary>
+
+![all-pods](images/all-pods.png)
+
+</details>
+
+<br>
+
+You should be able to ping from the UEs.
+<details>
+<summary>Ping test</summary>
+
+![ping-test](images/ping-test.png)
+
+</details>
+
 ### Deploying components
 We use [kustomize](https://kustomize.io/) to deploy the components.
 
@@ -98,3 +119,13 @@ Some convenience scripts are available in the `bin` folder:
 ## License
 
 This repository is licensed under the [MIT License](LICENSE).
+
+## Credits
+These manifest files are heavily inspired from [towards5gs-helm](https://github.com/Orange-OpenSource/towards5gs-helm) and the Docker images used are based on [free5gc-compose](https://github.com/free5gc/free5gc-compose).
+
+## Citation
+![GitHub](https://img.shields.io/badge/IEEE%20NOMS-2022-green)
+
+If you use the code in this repository in your research work or project, please consider citing the following publication.
+
+> N. Saha, A. James, N. Shahriar, R. Boutaba and A. Saleh. (2022). Demonstrating Network Slice KPI Monitoring in a 5G Testbed. In Proceedings of the IEEE/IFIP Network Operations and Management Symposium (NOMS). Budapest, Hungary, 25 - 29 April, 2022.
