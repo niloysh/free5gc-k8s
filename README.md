@@ -22,7 +22,7 @@ The repository is organized as follows:
 
 ## Deployment
 
-**Note**: Free5GC recommends kernel version 5.4.0. Using a higher kernel version (e.g, 6.x) may result in [issues with the UPF](https://forum.free5gc.org/t/upf-est-createfar-error-invalid-argument/2111). 
+**Note**: Free5GC recommends kernel version `5.4.0`. It has also been successfully tested on kernel `5.15.0-94`. Using a higher kernel version (e.g, 6.x) may result in [issues with the UPF](https://forum.free5gc.org/t/upf-est-createfar-error-invalid-argument/2111). 
 
 **Note**: The deployment instructions assume a working kubernetes cluster with OVS CNI installed. You can optionally use the [testbed-automator](https://github.com/niloysh/testbed-automator) to prepare the Kubernetes cluster. This includes setting up the K8s cluster, configuring the cluster, installing various Container Network Interfaces (CNIs), configuring OVS bridges, and preparing for the deployment of the 5G Core network.
 
@@ -40,21 +40,41 @@ To deploy Free5GC and its components, follow the deployment steps below:
 
 <br>
 
-**Note**: The testbed-automator scripts automatically configures the OVS bridges for a single-node cluster setup. For a multi-node cluster configuration, VXLAN tunnels are used for node interconnectivity.
+**Note**: The testbed-automator scripts automatically configures the OVS bridges for a single-node cluster setup, and VXLAN tunnel creation is not required. For a multi-node cluster configuration, VXLAN tunnels are used for node interconnectivity.
 
-2. Deploy the MongoDB database using the Kubernetes manifest files provided in the `mongodb/` directory.
-3. Deploy the network attachment definitions using manifest files in the `networks5g/` directory.
-4. Deploy Free5GC using the Kubernetes manifest files in the `free5gc/` directory.
-5. Deploy the Free5GC WebUI, use the Kubernetes manifest files in the `free5gc-webui/` directory.
-6. The `ueransim` directory contains Kubernetes manifest files for both gNB and UEs. First, deploy UERANSIM gNB using `ueransim/ueransim-gnb` directory and wait for NGAP connection to succeed.
-7. Ensure correct UE subscriber information is inserted. You can enter subscription information either using the web UI (see [accessing the Free5GC webui](#accessing-the-Free5GC-webui)). Subscriber details can be found in UE config files (e.g., [ue1.yaml](ueransim/ueransim-ue/ue1/ue1.yaml)).
-8. Deploy UERANSIM UEs using `ueransim/ueransim-ue/` directory.
+2. Deploy the MongoDB database using the Kubernetes manifest files provided in the `mongodb/` directory. See [deploying components](#deploying-components). Wait for the mongodb pod to be in the `Running` state before proceeding to the next step.
 
-   Deploy all components in the free5gc namespace. Create the namespace if needed. Use the following command for deployment, replacing <component> (e.g., free5gc-webui, free5gc) as needed:
+3. Deploy the network attachment definitions using manifest files in the `networks5g/` directory. This are used for the secondary interfaces of the UPF, SMF, etc.
 
-   ```bash
-   kubectl apply -k <component> -n free5gc
-   ```
+4. Install the gtp5g kernel module for Free5GC. Use the `install-gtp5g.sh` script to install gtp5g v0.8.2 on nodes where UPF should run. This is a prerequisite for deploying the UPF. 
+
+```bash
+cd bin
+./install-gtp5g.sh
+```
+
+5. Deploy Free5GC using the Kubernetes manifest files in the `free5gc/` directory. The pods should eventually be in the `Running` state. 
+
+6. Deploy the Free5GC WebUI, use the Kubernetes manifest files in the `free5gc-webui/` directory.
+
+7. The `ueransim` directory contains Kubernetes manifest files for both gNB and UEs. First, deploy UERANSIM gNB using `ueransim/ueransim-gnb` directory and wait for NGAP connection to succeed. You should see the following in the gNB log.
+
+![NGAP connection success](images/gnb-log.png)
+
+7. Ensure correct UE subscriber information is inserted. You can enter subscription information using the web UI (see [accessing the Free5GC webui](#accessing-the-Free5GC-webui)). Subscriber details can be found in UE config files (e.g., [ue1.yaml](ueransim/ueransim-ue/ue1/ue1.yaml)).
+
+8. Deploy UERANSIM UEs using `ueransim/ueransim-ue/` directory. Once the UE is connected, you should see the following logs:
+
+![UE connection success](images/ue-log.png)
+
+### Deploying components
+We use [kustomize](https://kustomize.io/) to deploy the components.
+
+Deploy all components in the free5gc namespace. Create the namespace if needed (`kubectl create namespace free5gc`). Use the following command for deployment, replacing <component> (e.g., free5gc-webui, free5gc) as needed:
+
+```bash
+kubectl apply -k <component> -n free5gc
+```
 
 ### Accessing the Free5GC webui
 1. Subscribers can be added using the Free5GC WebUI. The WebUI is accessible at `http://<node-ip>:30505`. The default username and password are `admin` and `free5gc`, respectively.
@@ -73,10 +93,6 @@ Some convenience scripts are available in the `bin` folder:
   ```
 
 - **install-gtp5g.sh**: Use this script to install gtp5g v0.8.2 on nodes where UPF should run.
-
-
-
-
 
 
 ## License
