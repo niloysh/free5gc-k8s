@@ -26,42 +26,48 @@ spec:
           ]'
     spec:
       initContainers:
-      - name: wait-nrf
-        image: busybox:1.32.0
-        env:
-        - name: DEPENDENCIES
-          value: nrf-nnrf:8000
-        command: ["sh", "-c", "until nc -z $DEPENDENCIES; do echo waiting for the NRF; sleep 2; done;"]
+        - name: wait-nrf
+          image: busybox:1.32.0
+          env:
+            - name: DEPENDENCIES
+              value: nrf-nnrf:8000
+          command:
+            [
+              "sh",
+              "-c",
+              "until nc -z $DEPENDENCIES; do echo waiting for the NRF; sleep 2; done;",
+            ]
       containers:
-      - name: upf
-        image: ghcr.io/niloysh/free5gc:v3.2.0
-        imagePullPolicy: Always
-        command: [ "/free5gc/config/wrapper.sh" ]
-        volumeMounts:
-        - mountPath: /free5gc/config/
-          name: upf-volume
-        ports:
-        - containerPort: 8805
-          name: n4
-          protocol: UDP
-        resources:
-          requests:
-            memory: "100Mi"
-            cpu: "100m"
-          limits:
-            memory: "512Mi"
-            cpu: "250m"
-        securityContext:
-          capabilities:
-            add: ["NET_ADMIN"]
+        - name: upf
+          image: ghcr.io/niloysh/free5gc:v3.2.0
+          imagePullPolicy: Always
+          command: ["/free5gc/config/wrapper.sh"]
+          volumeMounts:
+            - mountPath: /free5gc/config/
+              name: upf-volume
+          ports:
+            - containerPort: 8805
+              name: n4
+              protocol: UDP
+          resources:
+            requests:
+              memory: "100Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "250m"
+          securityContext:
+            capabilities:
+              add: ["NET_ADMIN"]
+            privileged: true
       restartPolicy: Always
       volumes:
-      - name: upf-volume
-        configMap:
-          name: upf2-configmap
-          items:
-          - key: upfcfg.yaml
-            path: upfcfg.yaml
-          - key: wrapper.sh
-            path: wrapper.sh
-            mode: 0777
+        - name: upf-volume
+          configMap:
+            name: upf2-configmap
+            items:
+              - key: upfcfg.yaml
+                path: upfcfg.yaml
+              - key: wrapper.sh
+                path: wrapper.sh
+                mode: 0777

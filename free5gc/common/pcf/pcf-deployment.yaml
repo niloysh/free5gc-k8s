@@ -18,37 +18,44 @@ spec:
         nf: pcf
     spec:
       initContainers:
-      - name: wait-smf
-        image: busybox:1.32.0
-        env:
-        - name: DEPENDENCIES
-          value: smf-nsmf:8000
-        command: ["sh", "-c", "until nc -z $DEPENDENCIES; do echo waiting for the SMF; sleep 2; done;"]
+        - name: wait-smf
+          image: busybox:1.32.0
+          env:
+            - name: DEPENDENCIES
+              value: smf-nsmf:8000
+          command:
+            [
+              "sh",
+              "-c",
+              "until nc -z $DEPENDENCIES; do echo waiting for the SMF; sleep 2; done;",
+            ]
       containers:
-      - image: ghcr.io/niloysh/free5gc:v3.2.0
-        name: pcf
-        ports:
-        - containerPort: 8000
-        command: ["./pcf"]
-        args: ["--config", "config/pcfcfg.yaml"]   
-        env:
-          - name: GIN_MODE
-            value: release
-        volumeMounts:
-        - mountPath: /free5gc/config/
-          name: pcf-volume
-        resources:
-          requests:
-            memory: "100Mi"
-            cpu: "100m"
-          limits:
-            memory: "512Mi"
-            cpu: "250m"
+        - image: ghcr.io/niloysh/free5gc:v3.2.0
+          name: pcf
+          securityContext:
+            privileged: true
+          ports:
+            - containerPort: 8000
+          command: ["./pcf"]
+          args: ["--config", "config/pcfcfg.yaml"]
+          env:
+            - name: GIN_MODE
+              value: release
+          volumeMounts:
+            - mountPath: /free5gc/config/
+              name: pcf-volume
+          resources:
+            requests:
+              memory: "100Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "250m"
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       volumes:
-      - name: pcf-volume
-        projected:
-          sources:
-          - configMap:
-              name: pcf-configmap
+        - name: pcf-volume
+          projected:
+            sources:
+              - configMap:
+                  name: pcf-configmap
