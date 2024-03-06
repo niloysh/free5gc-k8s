@@ -25,47 +25,54 @@ spec:
           ]'
     spec:
       initContainers:
-      - name: wait-ausf
-        image: busybox:1.32.0
-        env:
-        - name: DEPENDENCIES
-          value: ausf-nausf:8000
-        command: ["sh", "-c", "until nc -z $DEPENDENCIES; do echo waiting for the AUSF; sleep 2; done;"]
+        - name: wait-ausf
+          image: busybox:1.32.0
+          env:
+            - name: DEPENDENCIES
+              value: ausf-nausf:8000
+          command:
+            [
+              "sh",
+              "-c",
+              "until nc -z $DEPENDENCIES; do echo waiting for the AUSF; sleep 2; done;",
+            ]
       containers:
-      - image: ghcr.io/niloysh/free5gc:v3.2.0
-        name: smf
-        imagePullPolicy: Always
-        ports:
-        - name: nsmf
-          containerPort: 8000
-        - name: pfcp
-          containerPort: 8805
-          protocol: UDP
-        command: ["./smf"]
-        args: ["--config", "config/smfcfg.yaml"]   
-        env:
-          - name: GIN_MODE
-            value: release
-        volumeMounts:
-        - mountPath: /free5gc/config/
-          name: smf-volume
-        resources:
-          requests:
-            memory: "100Mi"
-            cpu: "100m"
-          limits:
-            memory: "512Mi"
-            cpu: "250m"
+        - image: ghcr.io/niloysh/free5gc:v3.2.0
+          name: smf
+          securityContext:
+            privileged: true
+          imagePullPolicy: Always
+          ports:
+            - name: nsmf
+              containerPort: 8000
+            - name: pfcp
+              containerPort: 8805
+              protocol: UDP
+          command: ["./smf"]
+          args: ["--config", "config/smfcfg.yaml"]
+          env:
+            - name: GIN_MODE
+              value: release
+          volumeMounts:
+            - mountPath: /free5gc/config/
+              name: smf-volume
+          resources:
+            requests:
+              memory: "100Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "250m"
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       volumes:
-      - name: smf-volume
-        projected:
-          sources:
-          - configMap:
-              name: smf-configmap
-              items:
-              - key: smfcfg.yaml
-                path: smfcfg.yaml
-              - key: uerouting.yaml
-                path: uerouting.yaml
+        - name: smf-volume
+          projected:
+            sources:
+              - configMap:
+                  name: smf-configmap
+                  items:
+                    - key: smfcfg.yaml
+                      path: smfcfg.yaml
+                    - key: uerouting.yaml
+                      path: uerouting.yaml

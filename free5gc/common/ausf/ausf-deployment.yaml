@@ -18,37 +18,44 @@ spec:
         nf: ausf
     spec:
       initContainers:
-      - name: wait-amf
-        image: busybox:1.32.0
-        env:
-        - name: DEPENDENCIES
-          value: amf-namf:8000
-        command: ["sh", "-c", "until nc -z $DEPENDENCIES; do echo waiting for the AMF; sleep 2; done;"]
+        - name: wait-amf
+          image: busybox:1.32.0
+          env:
+            - name: DEPENDENCIES
+              value: amf-namf:8000
+          command:
+            [
+              "sh",
+              "-c",
+              "until nc -z $DEPENDENCIES; do echo waiting for the AMF; sleep 2; done;",
+            ]
       containers:
-      - image: ghcr.io/niloysh/free5gc:v3.2.0
-        name: ausf
-        ports:
-        - containerPort: 8000
-        command: ["./ausf"]
-        args: ["--config", "config/ausfcfg.yaml"]  
-        env:
-          - name: GIN_MODE
-            value: release
-        volumeMounts:
-        - mountPath: /free5gc/config/
-          name: ausf-volume
-        resources:
-          requests:
-            memory: "100Mi"
-            cpu: "100m"
-          limits:
-            memory: "512Mi"
-            cpu: "250m"
+        - image: ghcr.io/niloysh/free5gc:v3.2.0
+          name: ausf
+          securityContext:
+            privileged: true
+          ports:
+            - containerPort: 8000
+          command: ["./ausf"]
+          args: ["--config", "config/ausfcfg.yaml"]
+          env:
+            - name: GIN_MODE
+              value: release
+          volumeMounts:
+            - mountPath: /free5gc/config/
+              name: ausf-volume
+          resources:
+            requests:
+              memory: "100Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "250m"
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       volumes:
-      - name: ausf-volume
-        projected:
-          sources:
-          - configMap:
-              name: ausf-configmap
+        - name: ausf-volume
+          projected:
+            sources:
+              - configMap:
+                  name: ausf-configmap
