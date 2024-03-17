@@ -59,7 +59,7 @@ spec:
           securityContext:
             capabilities:
               add: ["NET_ADMIN"]
-            privileged: true
+            privileged: false
       restartPolicy: Always
       volumes:
         - name: upf-volume

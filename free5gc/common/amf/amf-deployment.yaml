@@ -35,7 +35,7 @@ spec:
           imagePullPolicy: Always
           name: amf
           securityContext:
-            privileged: true
+            privileged: false
           ports:
             - name: namf
               containerPort: 8000
