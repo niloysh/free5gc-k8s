@@ -40,7 +40,7 @@ spec:
         - image: ghcr.io/niloysh/free5gc:v3.2.0
           name: smf
           securityContext:
-            privileged: false
+            privileged: true
           imagePullPolicy: Always
           ports:
             - name: nsmf
